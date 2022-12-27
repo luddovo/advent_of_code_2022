@@ -21,7 +21,7 @@ register = {
 
 blueprints = {}
 
-for line in open('test_input.txt'):
+for line in open('input.txt'):
     print(line)
     d = parse.parse("Blueprint {blueprint}: Each ore robot costs {ore_ore} ore. Each clay robot costs {clay_ore} ore. Each obsidian robot costs {obsidian_ore} ore and {obsidian_clay} clay. Each geode robot costs {geode_ore} ore and {geode_obsidian} obsidian.", line.strip())
     
@@ -66,32 +66,41 @@ STEPS = 24
 
 max_yield = 0
 
-prune_bars = register.copy()
-
 def go(blueprint, robots, materials, step):
-    global max_yield, prune_bars
+    global max_yield
     
-    # update prune bars
-    for b in prune_bars:
-        if materials[b] > 0 and step < prune_bars[b]:
-            prune_bars[b] = step
-            print(f"First {b} reached in {step} steps.")
-
-    # prune
-    for b in prune_bars:
-        if materials[b] == 0 and step > prune_bars[b]:
-            return
-
     # reached end of branch
-    if step == STEPS:
-        max_yield= max(max_yield, materials['geode'])
+    if step > STEPS:
         return
 
-    for r in ['none', 'geode', 'obsidian', 'clay', 'ore']:
+    # update prune bars
+    max_yield= max(max_yield, materials['geode'])
+
+    # theoretical yield
+    total = materials['geode']
+    for i in range(STEPS-step):
+        total += robots['geode'] + i
+
+    # prune
+    if total < max_yield:
+        return
+
+    if step == STEPS - 1:
+        work = ['none']
+    elif step == STEPS - 2:
+        work = ['none', 'geode']
+    else:
+        work = ['none']
+        for w in robots:
+            if robots[w] < robot_limits[w]:
+                work.append(w) 
+
+    for r in work:
         # check build robot
         #print(f"Step {step} testing {r} materials: {materials} robots {robots}")
-        cannot_build = any(materials[m] < blueprints[blueprint][r][m] for m in blueprints[blueprint][r])
-        if cannot_build: continue
+        if r != 'none':
+            cannot_build = any(materials[m] < blueprints[blueprint][r][m] for m in blueprints[blueprint][r])
+            if cannot_build: continue
 
         # fork state
         new_materials = materials.copy()
@@ -114,9 +123,10 @@ def go(blueprint, robots, materials, step):
 for blueprint in blueprints:
     print("Blueprint: ", blueprint)
     max_yield = 0
-    # reset prune bars
-    for b in prune_bars: prune_bars[b] = STEPS + 1
-    # prune_bars = {'ore': 2, 'clay': 4, 'obsidian': 11, 'geode': STEPS + 1}
+    robot_limits = register.copy()
+    for m in robot_limits: robot_limits[m] = max(blueprints[blueprint][r][m] for r in blueprints[blueprint])
+    robot_limits['geode'] = STEPS + 1
+    print(robot_limits)
     go(blueprint, robots.copy(), materials.copy(),0)
     print(max_yield)
     max_yields[blueprint] = max_yield
