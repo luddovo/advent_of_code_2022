@@ -1,12 +1,14 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal",
+            "console": "internalConsole",
+            "internalConsoleOptions": "openOnSessionStart",
             "justMyCode": true
         },
         {
@@ -14,6 +16,8 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
+            "console": "internalConsole",
+            "internalConsoleOptions": "openOnSessionStart",
             "justMyCode": true
         }
     ]
